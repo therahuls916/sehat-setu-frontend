@@ -3,28 +3,36 @@
 @tailwind utilities;
 
 @layer base {
+  /* By default (Light Mode), force all inputs to be Black */
   input, textarea, select {
-    @apply text-gray-900 dark:text-white !important;
+    color: #111827 !important; /* gray-900 */
   }
-  
-  /* Ensure placeholders remain gray */
-  input::placeholder, textarea::placeholder {
-    @apply text-gray-400 !important;
+
+  /* In Dark Mode, force all inputs to be White */
+  .dark input, .dark textarea, .dark select {
+    color: #ffffff !important;
   }
 }
 
-/* Fallback for browser auto-fill styles (Chrome/Edge often turn text white on yellow background) */
+/* --- FIX BROWSER AUTOFILL (Chrome/Edge) --- */
+/* Browsers often turn text invisible or backgrounds yellow on autofill. This fixes it. */
+
+/* Light Mode Autofill */
 input:-webkit-autofill,
 input:-webkit-autofill:hover, 
 input:-webkit-autofill:focus, 
-input:-webkit-autofill:active{
-    -webkit-text-fill-color: #1f2937 !important; /* Dark Gray */
+input:-webkit-autofill:active {
+    -webkit-text-fill-color: #111827 !important; /* Force Text Black */
+    -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important; /* Force Background White */
     transition: background-color 5000s ease-in-out 0s;
 }
 
+/* Dark Mode Autofill */
 .dark input:-webkit-autofill,
 .dark input:-webkit-autofill:hover, 
 .dark input:-webkit-autofill:focus, 
-.dark input:-webkit-autofill:active{
-    -webkit-text-fill-color: #ffffff !important; /* White */
+.dark input:-webkit-autofill:active {
+    -webkit-text-fill-color: #ffffff !important; /* Force Text White */
+    -webkit-box-shadow: 0 0 0px 1000px #1f2937 inset !important; /* Force Background Dark Gray */
+    transition: background-color 5000s ease-in-out 0s;
 }

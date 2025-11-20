@@ -31,8 +31,8 @@ export default function PharmacySidebar() {
   };
 
   return (
-    // --- STYLES UPDATED ---
-    <aside className="w-64 bg-sidebar h-screen flex flex-col border-r border-border">
+    // --- STYLES UPDATED FOR DARK MODE ---
+    <aside className="w-64 bg-sidebar dark:bg-dark-surface h-screen flex flex-col border-r border-border dark:border-dark-border transition-colors duration-300">
       <div className="p-6">
         <h1 className="text-2xl font-bold text-brand flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-7 h-7">
@@ -41,7 +41,7 @@ export default function PharmacySidebar() {
             </svg>
             SehatSetu
         </h1>
-        <span className="text-xs font-semibold text-content-secondary ml-1 mt-1">Pharmacy Portal</span>
+        <span className="text-xs font-semibold text-content-secondary dark:text-dark-textSecondary ml-1 mt-1">Pharmacy Portal</span>
       </div>
       <nav className="flex-grow p-4">
         <ul>
@@ -55,8 +55,8 @@ export default function PharmacySidebar() {
                   className={`
                     flex items-center px-3 py-2.5 rounded-md transition-colors text-sm font-medium
                     ${isActive 
-                      ? 'bg-brand-light text-brand' 
-                      : 'text-content-secondary hover:bg-brand-light hover:text-brand'
+                      ? 'bg-brand-light text-brand dark:bg-blue-900/30 dark:text-blue-300' 
+                      : 'text-content-secondary dark:text-dark-textSecondary hover:bg-brand-light hover:text-brand dark:hover:bg-dark-surfaceMuted dark:hover:text-white'
                     }
                   `}
                 >
@@ -68,11 +68,10 @@ export default function PharmacySidebar() {
           })}
         </ul>
       </nav>
-      <div className="p-4 border-t border-border">
+      <div className="p-4 border-t border-border dark:border-dark-border">
         <button
           onClick={handleLogout}
-          // --- LOGOUT BUTTON STYLES UPDATED ---
-          className="w-full flex items-center px-3 py-2.5 text-content-secondary text-sm font-medium hover:bg-red-50 hover:text-red-600 rounded-md"
+          className="w-full flex items-center px-3 py-2.5 text-content-secondary dark:text-dark-textSecondary text-sm font-medium hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400 rounded-md transition-colors"
         >
           <LogOut className="mr-3" size={20} />
           <span>Logout</span>
