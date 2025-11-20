@@ -3,13 +3,28 @@
 @tailwind utilities;
 
 @layer base {
-  body {
-    /*
-     * DEPRECATED: We no longer apply the background color to the body.
-     * The background color will now be controlled by the `panel` div
-     * inside our main layout components for the high-contrast effect.
-     * We leave a simple transition here.
-    */
-    @apply transition-colors duration-300;
+  input, textarea, select {
+    @apply text-gray-900 dark:text-white !important;
   }
+  
+  /* Ensure placeholders remain gray */
+  input::placeholder, textarea::placeholder {
+    @apply text-gray-400 !important;
+  }
+}
+
+/* Fallback for browser auto-fill styles (Chrome/Edge often turn text white on yellow background) */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active{
+    -webkit-text-fill-color: #1f2937 !important; /* Dark Gray */
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover, 
+.dark input:-webkit-autofill:focus, 
+.dark input:-webkit-autofill:active{
+    -webkit-text-fill-color: #ffffff !important; /* White */
 }
