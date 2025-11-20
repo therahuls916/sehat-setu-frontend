@@ -1,4 +1,3 @@
-// Updated File: src/app/pharmacy/(protected)/profile/page.tsx
 'use client';
 
 import { useEffect } from 'react';
@@ -8,22 +7,22 @@ import apiClient from '@/utils/api';
 import toast from 'react-hot-toast';
 import { Building, MapPin, Phone, LocateFixed, Save, UserCircle } from 'lucide-react';
 
-// Form data structure now includes the owner's name
+// --- DATA STRUCTURE & TYPES ---
 interface IFormInput {
-  ownerName: string; // Pharmacist's personal name
-  name: string;      // Pharmacy's business name
+  ownerName: string;
+  name: string;
   address: string;
   phone: string;
-  latitude?: number;
-  longitude?: number;
+  latitude?: number | string;
+  longitude?: number | string;
 }
 
-// --- API Functions ---
+// --- API FUNCTIONS ---
 const fetchPharmacyProfile = async (): Promise<IFormInput> => {
-  const { data } = await apiClient.get('/api/pharmacy/profile');
+  const { data } = await apiClient.get<any>('/api/pharmacy/profile');
   return {
     ...data,
-    ownerName: data.ownerId?.name || '', // Extract the populated owner name
+    ownerName: data.ownerId?.name || '',
     latitude: data.location?.coordinates[1] || '',
     longitude: data.location?.coordinates[0] || '',
   };
@@ -34,10 +33,10 @@ const updatePharmacyProfile = async (formData: IFormInput) => {
   return data;
 };
 
-
+// --- MAIN COMPONENT ---
 export default function PharmacyProfilePage() {
   const queryClient = useQueryClient();
-  const { register, handleSubmit, formState: { errors }, setValue } = useForm<IFormInput>();
+  const { register, handleSubmit, formState: { errors }, setValue, reset } = useForm<IFormInput>();
 
   const { data: profileData, isLoading, isError } = useQuery({
     queryKey: ['pharmacyProfile'],
@@ -50,21 +49,14 @@ export default function PharmacyProfilePage() {
       toast.success('Profile updated successfully!');
       queryClient.invalidateQueries({ queryKey: ['pharmacyProfile'] });
     },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || 'Failed to update profile.');
-    },
+    onError: (err: any) => toast.error(err.response?.data?.message || 'Failed to update profile.'),
   });
 
   useEffect(() => {
     if (profileData) {
-      setValue('ownerName', profileData.ownerName);
-      setValue('name', profileData.name);
-      setValue('address', profileData.address);
-      setValue('phone', profileData.phone);
-      setValue('latitude', profileData.latitude);
-      setValue('longitude', profileData.longitude);
+      reset(profileData);
     }
-  }, [profileData, setValue]);
+  }, [profileData, reset]);
 
   const onSubmit: SubmitHandler<IFormInput> = (data) => {
     mutate(data);
@@ -86,87 +78,78 @@ export default function PharmacyProfilePage() {
     }
   };
 
-  if (isLoading) return <div className="text-center p-10">Loading profile...</div>;
-  if (isError) return <div className="text-center p-10 text-red-600">Failed to load profile data.</div>;
-
-  const inputStyles = "w-full rounded-lg border-gray-300 bg-gray-50 py-2.5 shadow-sm transition-shadow duration-200 focus:border-l-4 focus:border-green-500 focus:ring-0 focus:shadow-md focus:shadow-green-500/20";
-  const readOnlyStyles = "w-full rounded-lg border-gray-300 bg-gray-100 py-3 pl-10 shadow-sm cursor-not-allowed text-gray-600";
-
+  if (isLoading) return <div className="text-content-primary dark:text-content-primary_dark">Loading profile...</div>;
+  if (isError) return <div className="text-red-500">Failed to load profile data.</div>;
+  
+  const cardStyles = "bg-card p-6 rounded-lg shadow-sm";
+  const inputStyles = "w-full p-2.5 bg-[#2d3748] dark:bg-[#374151] rounded-md border border-transparent focus:outline-none focus:ring-2 focus:ring-brand text-white placeholder:text-gray-400";
+  const readOnlyStyles = `${inputStyles} cursor-not-allowed opacity-70`;
+  const cardTitleStyles = "text-lg font-semibold text-content-primary mb-4";
 
   return (
-    <div className="mx-auto max-w-2xl rounded-xl border bg-white/80 p-8 shadow-lg backdrop-blur-lg">
-        <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-800">Pharmacy Profile</h1>
-            <p className="mt-2 text-gray-600">Keep your pharmacy details up to date for doctors.</p>
+    <div className="max-w-4xl mx-auto">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold text-content-primary dark:text-content-primary_dark">
+            Pharmacy Profile
+          </h2>
+          <button type="submit" disabled={isPending} className="flex items-center gap-2 px-4 py-2 bg-brand text-white font-semibold rounded-md hover:bg-brand-hover disabled:bg-gray-500">
+            <Save size={18} />
+            {isPending ? 'Saving...' : 'Save Changes'}
+          </button>
         </div>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-            {/* --- Personal Details Section --- */}
-            <fieldset>
-                <legend className="text-lg font-semibold text-gray-700 mb-4 border-b pb-2">Profile Owner</legend>
-                 <div>
-                    <label htmlFor="ownerName" className="block text-sm font-medium text-gray-700">Pharmacist Name</label>
-                    <div className="relative mt-1">
-                        <UserCircle className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                        <input id="ownerName" {...register('ownerName')} className={readOnlyStyles} readOnly />
-                    </div>
-                </div>
-            </fieldset>
 
-            {/* --- Business Details Section --- */}
-            <fieldset className="space-y-6">
-                <legend className="text-lg font-semibold text-gray-700 mb-4 border-b pb-2">Business Details</legend>
-                 <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700">Pharmacy Name</label>
-                    <div className="relative mt-1">
-                        <Building className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                        <input id="name" {...register('name')} className={readOnlyStyles} readOnly />
-                    </div>
+        <div className={cardStyles}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h3 className={cardTitleStyles}>Profile Owner</h3>
+              <div className="relative">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                    <UserCircle className="h-5 w-5 text-gray-400" />
                 </div>
-                <div>
-                    <label htmlFor="address" className="block text-sm font-medium text-gray-700">Full Address</label>
-                    <div className="relative mt-1">
-                        <MapPin className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                        <input id="address" {...register('address', { required: 'Address is required' })} className={`${inputStyles} pl-10`} />
-                        {errors.address && <p className="mt-1 text-sm text-red-600">{errors.address.message}</p>}
-                    </div>
+                <input {...register('ownerName')} className={`${readOnlyStyles} pl-10`} readOnly />
+              </div>
+            </div>
+            <div>
+              <h3 className={cardTitleStyles}>Business Name</h3>
+              <div className="relative">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                    <Building className="h-5 w-5 text-gray-400" />
                 </div>
-                <div>
-                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Contact Phone Number</label>
-                    <div className="relative mt-1">
-                        <Phone className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                        <input id="phone" type="tel" {...register('phone', { required: 'Phone number is required' })} className={`${inputStyles} pl-10`} />
-                        {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>}
-                    </div>
-                </div>
-            </fieldset>
-
-            {/* --- Location Section --- */}
-            <fieldset>
-                 <legend className="text-lg font-semibold text-gray-700 mb-4 border-b pb-2">Location Coordinates</legend>
-                 <div className="flex flex-wrap justify-end items-center gap-2 mb-4">
-                    <button type="button" onClick={handleGetLocation} className="flex items-center gap-2 rounded-md bg-gray-200 px-3 py-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-300">
-                      <LocateFixed size={16} /> Get My Current Location
-                    </button>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="latitude" className="text-sm font-medium text-gray-600">Latitude</label>
-                      <input id="latitude" type="number" step="any" {...register('latitude')} className={`mt-1 ${inputStyles}`} placeholder="e.g., 9.9676" />
-                    </div>
-                    <div>
-                      <label htmlFor="longitude" className="text-sm font-medium text-gray-600">Longitude</label>
-                      <input id="longitude" type="number" step="any" {...register('longitude')} className={`mt-1 ${inputStyles}`} placeholder="e.g., 76.299" />
-                    </div>
-                </div>
-            </fieldset>
-
-            <div className="pt-4">
-                <button type="submit" disabled={isPending} className="flex w-full justify-center items-center gap-2 rounded-lg border border-transparent bg-green-600 py-3 px-4 font-medium text-white shadow-md transition-transform duration-200 hover:scale-105 hover:bg-green-700 disabled:bg-gray-400">
-                    <Save size={18} />
-                    {isPending ? 'Saving...' : 'Save Changes'}
+                <input {...register('name')} className={`${readOnlyStyles} pl-10`} readOnly />
+              </div>
+            </div>
+            <div className="md:col-span-2">
+              <h3 className={cardTitleStyles}>Contact Information</h3>
+              <div className="space-y-4">
+                  <div className="relative">
+                      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><MapPin className="h-5 w-5 text-gray-400" /></div>
+                      <input {...register('address', { required: 'Address is required' })} placeholder="Full Address" className={`${inputStyles} pl-10`} />
+                      {errors.address && <p className="mt-1 text-sm text-red-500">{errors.address.message}</p>}
+                  </div>
+                  <div className="relative">
+                      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><Phone className="h-5 w-5 text-gray-400" /></div>
+                      <input type="tel" {...register('phone', { required: 'Phone number is required' })} placeholder="Contact Phone" className={`${inputStyles} pl-10`} />
+                      {errors.phone && <p className="mt-1 text-sm text-red-500">{errors.phone.message}</p>}
+                  </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div className={cardStyles}>
+            <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-content-primary">Location Coordinates</h3>
+                <button type="button" onClick={handleGetLocation} className="flex items-center gap-2 text-sm font-semibold text-brand hover:text-brand-hover">
+                    <LocateFixed size={16} /> Use My Location
                 </button>
             </div>
-        </form>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="number" step="any" {...register('latitude')} placeholder="Latitude" className={inputStyles} />
+                <input type="number" step="any" {...register('longitude')} placeholder="Longitude" className={inputStyles} />
+            </div>
+        </div>
+      </form>
     </div>
   );
 }

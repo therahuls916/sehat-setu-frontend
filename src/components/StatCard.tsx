@@ -1,4 +1,3 @@
-// Updated File: src/components/StatCard.tsx
 import type { LucideIcon } from 'lucide-react';
 
 interface StatCardProps {
@@ -8,22 +7,21 @@ interface StatCardProps {
   color: 'blue' | 'green' | 'amber';
 }
 
-// Updated color variants to include dark mode styles for both the icon and shadow
+// --- NEW, SIMPLIFIED COLOR VARIANTS ---
+// These colors are now for the icon only. They do not need dark mode variants
+// because the card background is always light.
 const colorVariants = {
   blue: {
-    bg: 'bg-blue-100 dark:bg-blue-500/10',
-    text: 'text-blue-600 dark:text-blue-400',
-    shadow: 'shadow-blue-200/50 dark:shadow-blue-500/10',
+    bg: 'bg-blue-100',
+    text: 'text-blue-600',
   },
   green: {
-    bg: 'bg-green-100 dark:bg-green-500/10',
-    text: 'text-green-600 dark:text-green-400',
-    shadow: 'shadow-green-200/50 dark:shadow-green-500/10',
+    bg: 'bg-green-100',
+    text: 'text-green-600',
   },
   amber: {
-    bg: 'bg-amber-100 dark:bg-amber-500/10',
-    text: 'text-amber-600 dark:text-amber-400',
-    shadow: 'shadow-amber-200/50 dark:shadow-amber-500/10',
+    bg: 'bg-amber-100',
+    text: 'text-amber-600',
   },
 };
 
@@ -31,21 +29,20 @@ export default function StatCard({ title, value, icon: Icon, color }: StatCardPr
   const variant = colorVariants[color];
 
   return (
-    // Added dark mode styles for background, border, and hover effects
-    <div className={`
-      bg-white dark:bg-dark-surfaceMuted 
-      p-6 rounded-lg shadow-xl ${variant.shadow} 
-      flex items-center space-x-4 
-      border border-gray-200/50 dark:border-dark-border
-      hover:shadow-2xl hover:-translate-y-1 transition-all duration-300
-    `}>
-      {/* Icon styles are now pulled from the updated variants */}
+    // --- REDESIGNED CARD STYLES ---
+    // The card background is now ALWAYS `bg-card` (white).
+    // It has a subtle border and shadow that work on any background.
+    <div className="bg-card p-6 rounded-lg shadow-sm flex items-center space-x-4 border border-border">
+      
+      {/* Icon styles are now simpler, pulling from the new variants */}
       <div className={`p-3 rounded-full ${variant.bg} ${variant.text}`}>
         <Icon size={24} />
       </div>
+
+      {/* Text colors are now ALWAYS the light-theme content colors */}
       <div>
-        <p className="text-sm text-textSecondary dark:text-dark-textSecondary">{title}</p>
-        <p className="text-2xl font-bold text-textPrimary dark:text-dark-textPrimary">{value}</p>
+        <p className="text-sm text-content-secondary">{title}</p>
+        <p className="text-2xl font-bold text-content-primary">{value}</p>
       </div>
     </div>
   );

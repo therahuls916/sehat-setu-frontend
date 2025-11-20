@@ -1,143 +1,529 @@
-// Updated File: src/app/doctor/(protected)/profile/page.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
-import { X, Save } from 'lucide-react';
-import apiClient from '@/utils/api';
+import { useEffect, useState } from 'react';
+import { useForm, SubmitHandler, useFieldArray, Controller } from 'react-hook-form';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import apiClient from '@/utils/api';
 import toast from 'react-hot-toast';
 
-// --- Data types ---
-interface Pharmacy { _id: string; name: string; }
-interface ProfileData { name: string; specialization: string; linkedPharmacies: string[]; }
+import {
+  Save,
+  PlusCircle,
+  Trash2,
+  X,
+  LocateFixed,
+  UploadCloud,
+  User,
+  Stethoscope,
+  Phone
+} from 'lucide-react';
 
-// --- API functions ---
-const fetchDoctorProfile = async (): Promise<ProfileData> => {
-  const { data } = await apiClient.get('/api/doctor/profile');
-  return data;
+// ----------------- TYPES -----------------
+
+interface Pharmacy {
+  _id: string;
+  name: string;
+}
+
+interface Timing {
+  day: string;
+  time: string;
+}
+
+interface DoctorProfileFormData {
+  name: string;
+  specialization: string;
+  profilePictureUrl: string;
+  phone: string;
+  about: string;
+  services: string[];
+  timings: Timing[];
+  consultationFee: {
+    firstVisit: number | string;
+    followUp: number | string;
+  };
+  latitude: number | string;
+  longitude: number | string;
+  linkedPharmacies: string[];
+}
+
+// ----------------- API -----------------
+
+const fetchDoctorProfile = async (): Promise<DoctorProfileFormData> => {
+  const { data } = await apiClient.get<any>('/api/doctor/profile');
+  return {
+    name: data.name || '',
+    specialization: data.specialization || '',
+    profilePictureUrl: data.profilePictureUrl || '',
+    phone: data.phone || '',
+    about: data.about || '',
+    services: data.services || [],
+    timings: data.timings || [],
+    consultationFee: {
+      firstVisit: data.consultationFee?.firstVisit || '',
+      followUp: data.consultationFee?.followUp || ''
+    },
+    latitude: data.location?.coordinates?.[1] || '',
+    longitude: data.location?.coordinates?.[0] || '',
+    linkedPharmacies: data.linkedPharmacies || []
+  };
 };
 
 const fetchAllPharmacies = async (): Promise<Pharmacy[]> => {
-  const { data } = await apiClient.get('/api/pharmacy/all');
+  const { data } = await apiClient.get<Pharmacy[]>('/api/pharmacy/all');
   return data;
 };
 
+// ----------------- COMPONENT -----------------
+
 export default function ProfilePage() {
   const queryClient = useQueryClient();
-  
-  const [formData, setFormData] = useState<ProfileData>({
-    name: '', specialization: '', linkedPharmacies: [],
+  const [newService, setNewService] = useState('');
+
+  const { register, handleSubmit, control, setValue, reset, watch } =
+    useForm<DoctorProfileFormData>({
+      defaultValues: {
+        name: '',
+        specialization: '',
+        profilePictureUrl: '',
+        phone: '',
+        about: '',
+        services: [],
+        timings: [],
+        consultationFee: { firstVisit: '', followUp: '' },
+        latitude: '',
+        longitude: '',
+        linkedPharmacies: []
+      }
+    });
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'timings'
   });
 
-  const { data: profile, isLoading: isLoadingProfile } = useQuery({
+  const linkedPharmacies = watch('linkedPharmacies');
+
+  const { data: profileData, isLoading: isLoadingProfile } = useQuery({
     queryKey: ['userProfile'],
-    queryFn: fetchDoctorProfile,
+    queryFn: fetchDoctorProfile
   });
 
   const { data: allPharmacies, isLoading: isLoadingPharmacies } = useQuery({
     queryKey: ['allPharmacies'],
-    queryFn: fetchAllPharmacies,
+    queryFn: fetchAllPharmacies
   });
 
   const updateProfileMutation = useMutation({
-    mutationFn: (updatedProfile: ProfileData) => apiClient.put('/api/doctor/profile', updatedProfile),
+    mutationFn: (updatedProfile: any) =>
+      apiClient.put('/api/doctor/profile', updatedProfile),
+
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userProfile'] });
       toast.success('Profile updated successfully!');
     },
-    onError: () => {
-      toast.error('Failed to update profile. Please try again.');
-    },
+
+    onError: (error: any) =>
+      toast.error(error.response?.data?.message || 'Failed to update profile.')
   });
 
   useEffect(() => {
-    if (profile) {
-      setFormData({
-        name: profile.name || '',
-        specialization: profile.specialization || '',
-        linkedPharmacies: profile.linkedPharmacies || [],
-      });
+    if (profileData) reset(profileData);
+  }, [profileData, reset]);
+
+  const onSubmit: SubmitHandler<DoctorProfileFormData> = (data) => {
+    const payload = {
+      ...data,
+      consultationFee: {
+        firstVisit: Number(data.consultationFee.firstVisit) || 0,
+        followUp: Number(data.consultationFee.followUp) || 0
+      },
+      latitude: Number(data.latitude) || null,
+      longitude: Number(data.longitude) || null
+    };
+
+    updateProfileMutation.mutate(payload);
+  };
+
+  const handleAddService = () => {
+    if (newService.trim() !== '') {
+      setValue('services', [...watch('services'), newService.trim()]);
+      setNewService('');
     }
-  }, [profile]);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = e.target;
-    setFormData((prev) => ({ ...prev, [id]: value }));
   };
-  
-  const handleAddPharmacy = (pharmacyId: string) => {
-    if (pharmacyId && !formData.linkedPharmacies.includes(pharmacyId)) {
-      setFormData((prev) => ({
-        ...prev,
-        linkedPharmacies: [...prev.linkedPharmacies, pharmacyId],
-      }));
+
+  const handleRemoveService = (index: number) => {
+    setValue(
+      'services',
+      watch('services').filter((_, i) => i !== index)
+    );
+  };
+
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error('Geolocation not supported.');
+      return;
     }
+
+    const toastId = toast.loading('Fetching location...');
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setValue('latitude', pos.coords.latitude);
+        setValue('longitude', pos.coords.longitude);
+        toast.success('Location fetched!', { id: toastId });
+      },
+      () => {
+        toast.error('Could not get location.', { id: toastId });
+      }
+    );
   };
 
-  const handleRemovePharmacy = (pharmacyIdToRemove: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      linkedPharmacies: prev.linkedPharmacies.filter((id) => id !== pharmacyIdToRemove),
-    }));
-  };
-  
-  const handleSaveChanges = () => {
-    updateProfileMutation.mutate(formData);
-  };
+  if (isLoadingProfile || isLoadingPharmacies)
+    return <div className="text-white">Loading...</div>;
 
-  if (isLoadingProfile || isLoadingPharmacies) {
-    return <div className="text-gray-800 dark:text-dark-textPrimary">Loading profile...</div>;
-  }
-  
-  if (!profile || !allPharmacies) {
-    return <div className="text-red-600 dark:text-red-400">Could not load profile data.</div>;
-  }
-  
-  const availablePharmacies = allPharmacies.filter(
-    (p) => !formData.linkedPharmacies.includes(p._id)
-  );
+  const availablePharmacies =
+    allPharmacies?.filter((p) => !linkedPharmacies.includes(p._id)) || [];
 
-  const selectedPharmacies = formData.linkedPharmacies.map(id => 
-    allPharmacies.find(p => p._id === id)
-  ).filter(Boolean) as Pharmacy[];
+  const selectedPharmacies =
+    linkedPharmacies
+      .map((id) => allPharmacies?.find((p) => p._id === id))
+      .filter(Boolean) || [];
 
-  const inputStyles = "w-full p-2 border border-gray-300 dark:border-dark-border rounded-md shadow-sm dark:bg-dark-surface dark:text-dark-textPrimary focus:ring-primary/50 focus:border-primary";
+  const inputStyles =
+    'w-full p-2.5 bg-[#2d3748] dark:bg-[#374151] rounded-md border border-transparent focus:outline-none focus:ring-2 focus:ring-brand text-white placeholder:text-gray-400';
+  const cardStyles = 'bg-card p-6 rounded-lg shadow-sm';
+  const cardTitleStyles = 'text-lg font-semibold text-content-primary mb-4';
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-textPrimary dark:text-dark-textPrimary mb-6">Edit Your Profile</h1>
-      <div className="space-y-6">
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium text-textSecondary dark:text-dark-textSecondary mb-1">Full Name</label>
-          <input type="text" id="name" value={formData.name} onChange={handleInputChange} className={inputStyles} />
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-content-secondary dark:text-content-secondary_dark">
+          Edit Your Profile
+        </h2>
+
+        <button
+          type="submit"
+          disabled={updateProfileMutation.isPending}
+          className="flex items-center gap-2 px-4 py-2 bg-brand text-white font-semibold rounded-md hover:bg-brand-hover disabled:bg-gray-500"
+        >
+          <Save size={18} />
+          {updateProfileMutation.isPending ? 'Saving...' : 'Save Changes'}
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* LEFT COLUMN */}
+        <div className="lg:col-span-1 space-y-8">
+          {/* PROFILE PICTURE */}
+          <div className={cardStyles}>
+            <h3 className={cardTitleStyles}>Profile Picture</h3>
+
+            <Controller
+              control={control}
+              name="profilePictureUrl"
+              render={({ field }) => (
+                <div>
+                  {field.value && (
+                    <img
+                      src={field.value}
+                      alt="Profile"
+                      className="mb-4 w-full h-48 rounded-md object-cover"
+                    />
+                  )}
+
+                  <div
+                    className="flex justify-center items-center flex-col p-6 border-2 border-dashed rounded-lg border-border hover:border-brand cursor-pointer"
+                    onClick={() =>
+                      document.getElementById('pictureUpload')?.click()
+                    }
+                  >
+                    <UploadCloud className="w-10 h-10 text-content-secondary" />
+                    <p className="mt-2 text-xs text-content-secondary">
+                      PNG, JPG, GIF up to 10MB
+                    </p>
+
+                    <input
+                      type="file"
+                      id="pictureUpload"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+
+                        const toastId = toast.loading('Uploading image...');
+
+                        const formData = new FormData();
+                        formData.append('file', file);
+                        formData.append('upload_preset', 'ml_default');
+
+                        try {
+                          const res = await fetch(
+                            `https://api.cloudinary.com/v1_1/dz6jq4gew/image/upload`,
+                            { method: 'POST', body: formData }
+                          );
+                          const data = await res.json();
+
+                          if (data.secure_url) {
+                            field.onChange(data.secure_url);
+                            toast.success('Image uploaded!', { id: toastId });
+                          } else throw new Error('Upload failed');
+                        } catch {
+                          toast.error('Could not upload image.', {
+                            id: toastId
+                          });
+                        }
+                      }}
+                    />
+                  </div>
+
+                  <input
+                    type="text"
+                    {...register('profilePictureUrl')}
+                    placeholder="Or paste image URL"
+                    className={`${inputStyles} mt-4 text-sm`}
+                  />
+                </div>
+              )}
+            />
+          </div>
+
+          {/* BASIC INFORMATION */}
+          <div className={`${cardStyles} space-y-4`}>
+            <h3 className={cardTitleStyles}>Basic Information</h3>
+
+            {/* Name */}
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3">
+                <User className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                {...register('name')}
+                placeholder="Full Name"
+                className={`${inputStyles} pl-10`}
+              />
+            </div>
+
+            {/* Specialization */}
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3">
+                <Stethoscope className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                {...register('specialization')}
+                placeholder="Specialization"
+                className={`${inputStyles} pl-10`}
+              />
+            </div>
+
+            {/* Phone */}
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3">
+                <Phone className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="tel"
+                {...register('phone')}
+                placeholder="Phone Number"
+                className={`${inputStyles} pl-10`}
+              />
+            </div>
+          </div>
         </div>
-        <div>
-          <label htmlFor="specialization" className="block text-sm font-medium text-textSecondary dark:text-dark-textSecondary mb-1">Specialization</label>
-          <input type="text" id="specialization" value={formData.specialization} onChange={handleInputChange} className={inputStyles} />
-        </div>
-        <div>
-          <label htmlFor="pharmacy" className="block text-sm font-medium text-textSecondary dark:text-dark-textSecondary mb-1">Linked Pharmacies</label>
-          <div className="flex flex-wrap gap-2 p-2 border border-gray-300 dark:border-dark-border rounded-md mb-2 min-h-[42px]">
-            {selectedPharmacies.map((pharmacy) => (
-              <div key={pharmacy._id} className="flex items-center bg-primary/20 text-primary dark:text-cyan-300 font-medium px-3 py-1 rounded-full">
-                <span>{pharmacy.name}</span>
-                <button onClick={() => handleRemovePharmacy(pharmacy._id)} className="ml-2 hover:text-red-500"><X size={16} /></button>
+
+        {/* RIGHT COLUMN */}
+        <div className="lg:col-span-2 space-y-8">
+          {/* ABOUT */}
+          <div className={cardStyles}>
+            <h3 className={cardTitleStyles}>About Me</h3>
+            <textarea
+              {...register('about')}
+              rows={5}
+              className={inputStyles}
+              placeholder="Write about your experience..."
+            ></textarea>
+          </div>
+
+          {/* SERVICES */}
+          <div className={cardStyles}>
+            <h3 className={cardTitleStyles}>Services Offered</h3>
+
+            <div className="flex flex-wrap gap-2 mb-2">
+              {watch('services').map((service, index) => (
+                <div
+                  key={index}
+                  className="flex items-center bg-brand-light text-brand font-medium pl-3 pr-2 py-1 rounded-full text-sm"
+                >
+                  {service}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveService(index)}
+                    className="ml-2 hover:text-red-500"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <input
+              type="text"
+              value={newService}
+              onChange={(e) => setNewService(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleAddService();
+                }
+              }}
+              placeholder="Type and press Enter"
+              className={inputStyles}
+            />
+          </div>
+
+          {/* TIMINGS */}
+          <div className={`${cardStyles} space-y-4`}>
+            <h3 className={cardTitleStyles}>Clinic Timings</h3>
+
+            {fields.map((field, index) => (
+              <div key={field.id} className="flex gap-2 items-center">
+                <input
+                  {...register(`timings.${index}.day`)}
+                  placeholder="Mon - Fri"
+                  className={`${inputStyles} w-1/3`}
+                />
+                <input
+                  {...register(`timings.${index}.time`)}
+                  placeholder="9:00 AM - 5:00 PM"
+                  className={inputStyles}
+                />
+                <button
+                  type="button"
+                  onClick={() => remove(index)}
+                  className="p-2 text-gray-400 hover:text-red-500"
+                >
+                  <Trash2 size={18} />
+                </button>
               </div>
             ))}
-             {selectedPharmacies.length === 0 && <span className="text-sm text-gray-400 dark:text-gray-500 p-1">No pharmacies linked yet.</span>}
+
+            <button
+              type="button"
+              onClick={() => append({ day: '', time: '' })}
+              className="flex items-center gap-2 text-brand font-semibold"
+            >
+              <PlusCircle size={16} /> Add Timing
+            </button>
           </div>
-          <select id="pharmacy" value="" onChange={(e) => handleAddPharmacy(e.target.value)} className={inputStyles}>
-            <option value="" disabled>-- Add a pharmacy --</option>
-            {availablePharmacies.map((pharmacy) => (<option key={pharmacy._id} value={pharmacy._id}>{pharmacy.name}</option>))}
-          </select>
-        </div>
-        <div className="flex justify-end">
-          <button onClick={handleSaveChanges} disabled={updateProfileMutation.isPending} className="flex items-center gap-2 px-6 py-2 bg-primary text-white font-semibold rounded-lg shadow-md hover:bg-primary/90 disabled:bg-gray-400">
-            <Save size={18} />
-            {updateProfileMutation.isPending ? 'Saving...' : 'Save Changes'}
-          </button>
+
+          {/* FEES */}
+          <div className={`${cardStyles} grid grid-cols-1 md:grid-cols-2 gap-4`}>
+            <div>
+              <h3 className={cardTitleStyles}>First Visit Fee (₹)</h3>
+              <input
+                type="number"
+                {...register('consultationFee.firstVisit')}
+                className={inputStyles}
+              />
+            </div>
+            <div>
+              <h3 className={cardTitleStyles}>Follow-up Fee (₹)</h3>
+              <input
+                type="number"
+                {...register('consultationFee.followUp')}
+                className={inputStyles}
+              />
+            </div>
+          </div>
+
+          {/* LOCATION */}
+          <div className={cardStyles}>
+            <div className="flex justify-between items-center">
+              <h3 className={cardTitleStyles}>Clinic Location</h3>
+              <button
+                type="button"
+                onClick={handleGetLocation}
+                className="flex items-center gap-2 text-brand font-semibold"
+              >
+                <LocateFixed size={16} /> Use My Location
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input
+                type="number"
+                step="any"
+                {...register('latitude')}
+                placeholder="Latitude"
+                className={inputStyles}
+              />
+              <input
+                type="number"
+                step="any"
+                {...register('longitude')}
+                placeholder="Longitude"
+                className={inputStyles}
+              />
+            </div>
+          </div>
+
+          {/* PHARMACIES */}
+          <div className={cardStyles}>
+            <h3 className={cardTitleStyles}>Linked Pharmacies</h3>
+
+            <div className="flex flex-wrap gap-2 mb-3">
+              {selectedPharmacies.map((pharmacy: any) => (
+                <div
+                  key={pharmacy._id}
+                  className="flex items-center bg-brand-light text-brand px-3 py-1 rounded-full text-sm"
+                >
+                  {pharmacy.name}
+
+                  <button
+                    type="button"
+                    className="ml-2 hover:text-red-500"
+                    onClick={() =>
+                      setValue(
+                        'linkedPharmacies',
+                        linkedPharmacies.filter((id) => id !== pharmacy._id)
+                      )
+                    }
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <Controller
+              name="linkedPharmacies"
+              control={control}
+              render={({ field }) => (
+                <select
+                  value=""
+                  onChange={(e) =>
+                    field.onChange([...linkedPharmacies, e.target.value])
+                  }
+                  className={inputStyles}
+                >
+                  <option value="" disabled>
+                    -- Add a pharmacy --
+                  </option>
+
+                  {availablePharmacies.map((p) => (
+                    <option key={p._id} value={p._id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+            />
+          </div>
         </div>
       </div>
-    </div>
+    </form>
   );
 }

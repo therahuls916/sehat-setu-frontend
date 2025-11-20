@@ -1,4 +1,3 @@
-// Updated File: src/app/pharmacy/(protected)/layout.tsx
 'use client';
 
 import { useEffect } from 'react';
@@ -38,12 +37,12 @@ export default function PharmacyLayout({
     retry: 1,
   });
 
+  // This crucial logic for profile checking remains unchanged.
   useEffect(() => {
     if (!isAuthLoading && !firebaseUser) {
       router.push('/pharmacy/login');
       return;
     }
-
     if (firebaseUser && profileStatus?.hasProfile === false) {
       if (pathname !== '/pharmacy/create-profile') {
         router.push('/pharmacy/create-profile');
@@ -54,35 +53,39 @@ export default function PharmacyLayout({
   const isLoading = isAuthLoading || (firebaseUser && isProfileLoading);
   if (isLoading) {
     return (
-        <div className="flex h-screen items-center justify-center bg-gray-50 dark:bg-dark-surface">
-            <div className="text-gray-800 dark:text-dark-textPrimary">
+        <div className="flex h-screen items-center justify-center bg-panel dark:bg-panel-dark">
+            <div className="text-content-primary dark:text-content-primary_dark">
                 {isAuthLoading ? 'Loading session...' : 'Verifying profile...'}
             </div>
         </div>
     );
   }
 
+  // This handles the forced create-profile page
   if (profileStatus?.hasProfile === false) {
-    // The create-profile page already has its own full-page styling
     return <>{children}</>;
   }
   
   if(isError) return (
-    <div className="flex h-screen items-center justify-center bg-gray-50 dark:bg-dark-surface">
-        <div className="text-red-600 dark:text-red-400">Error verifying profile. Please try again.</div>
+    <div className="flex h-screen items-center justify-center bg-panel dark:bg-panel-dark">
+        <div className="text-red-500">Error verifying profile. Please try again.</div>
     </div>
   );
 
+  // This is the main layout for authenticated users with a profile.
   if (firebaseUser && profileStatus?.hasProfile === true) {
     return (
-      // Main container now has dark mode background
-      <div className="flex h-screen bg-gray-50 dark:bg-dark-surface overflow-hidden">
+      // The main container is a simple flex row.
+      <div className="flex h-screen">
+        {/* The Sidebar is the first child, with its own white background */}
         <PharmacySidebar />
-
-        <div className="flex-1 flex flex-col overflow-y-auto">
-          {/* Header now has dark mode background and border */}
-          <header className="sticky top-0 z-10 bg-gray-50/80 dark:bg-dark-surface/80 p-8 pb-4 backdrop-blur-sm border-b border-gray-200/50 dark:border-dark-border">
-            <Header title={title} />
+        
+        {/* The main content panel takes up the remaining space */}
+        <div className="flex-1 flex flex-col overflow-y-auto bg-panel dark:bg-panel-dark">
+          
+          {/* The Header now lives inside the scrolling panel */}
+          <header className="p-8 pb-4">
+              <Header title={title} />
           </header>
 
           {/* The main content area where pages are rendered */}

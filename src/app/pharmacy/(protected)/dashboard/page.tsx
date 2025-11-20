@@ -1,4 +1,3 @@
-// src/app/pharmacy/(protected)/dashboard/page.tsx
 'use client';
 
 import StatCard from "@/components/StatCard";
@@ -7,6 +6,8 @@ import { useQuery } from '@tanstack/react-query';
 import apiClient from '@/utils/api';
 import Link from "next/link";
 
+// --- DATA STRUCTURE & API FUNCTION ---
+
 interface DashboardStats {
   totalMedicines: number;
   pendingPrescriptions: number;
@@ -14,9 +15,12 @@ interface DashboardStats {
 }
 
 const fetchDashboardStats = async (): Promise<DashboardStats> => {
-  const { data } = await apiClient.get('/api/pharmacy/stats');
+  // Added explicit type for type safety
+  const { data } = await apiClient.get<DashboardStats>('/api/pharmacy/stats');
   return data;
 };
+
+// --- MAIN COMPONENT ---
 
 export default function PharmacyDashboardPage() {
   const { data: stats, isLoading, isError } = useQuery({
@@ -24,18 +28,27 @@ export default function PharmacyDashboardPage() {
     queryFn: fetchDashboardStats,
   });
 
-  if (isLoading) return <div>Loading dashboard stats...</div>;
-  if (isError) return <div>Failed to load stats. Please ensure you have created a pharmacy profile.</div>;
+  // --- LOADING / ERROR STATES (Updated with new text colors) ---
+  if (isLoading) {
+    return <div className="text-content-primary dark:text-content-primary_dark">Loading dashboard stats...</div>;
+  }
+  if (isError) {
+    return <div className="text-red-500">Failed to load stats. Please ensure you have created a pharmacy profile.</div>;
+  }
 
   return (
     <div>
+      {/* --- PAGE HEADER (Updated with new text colors and hierarchy) --- */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-textPrimary">Dashboard</h1>
-        <p className="mt-1 text-textSecondary">
+        <h2 className="text-2xl font-bold text-content-primary dark:text-content-primary_dark">
+          Dashboard
+        </h2>
+        <p className="mt-1 text-content-secondary dark:text-content-secondary_dark">
           Welcome! Here is an overview of your pharmacy's activity.
         </p>
       </div>
 
+      {/* --- STAT CARD GRID (No changes needed, will auto-update) --- */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Link href="/pharmacy/manage-stock">
           <StatCard
@@ -55,7 +68,7 @@ export default function PharmacyDashboardPage() {
           title="Out of Stock Alerts"
           value={stats?.outOfStock.toString() || '0'}
           icon={AlertTriangle}
-          color="green" // Using green, but could be red if you prefer
+          color="green"
         />
       </div>
     </div>

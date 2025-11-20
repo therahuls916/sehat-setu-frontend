@@ -4,6 +4,12 @@
 
 @layer base {
   body {
-    @apply bg-gray-50 dark:bg-dark-surface transition-colors duration-300;
+    /*
+     * DEPRECATED: We no longer apply the background color to the body.
+     * The background color will now be controlled by the `panel` div
+     * inside our main layout components for the high-contrast effect.
+     * We leave a simple transition here.
+    */
+    @apply transition-colors duration-300;
   }
 }

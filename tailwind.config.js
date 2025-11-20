@@ -2,7 +2,7 @@
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  darkMode: "class", // <-- ADD THIS LINE
+  darkMode: "class",
   content: [
     "./src/app/**/*.{js,ts,jsx,tsx}",
     "./src/components/**/*.{js,ts,jsx,tsx}",
@@ -10,22 +10,37 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Light theme colors (as before)
-        primary: "#0ea5e9",
-        secondary: "#d1fae5",
-        accent: "#10b981",
-        surface: "#ffffff",
-        textPrimary: "#0f172a",
-        textSecondary: "#475569",
+        // --- NEW HIGH-CONTRAST PALETTE ---
 
-        // --- NEW: Dark theme colors ---
-        dark: {
-          surface: "#111827",      // Dark background (e.g., slate-900)
-          surfaceMuted: "#1f2937", // Slightly lighter for cards (e.g., slate-800)
-          textPrimary: "#f3f4f6",    // Light text (e.g., gray-100)
-          textSecondary: "#9ca3af",  // Muted gray text (e.g., gray-400)
-          border: "#374151",      // Border color (e.g., gray-700)
+        // Primary brand color, as seen in the active sidebar link.
+        brand: {
+          DEFAULT: '#3b82f6', // A vibrant, professional blue (blue-500)
+          light: '#eff6ff',   // The light blue background for active sidebar items (blue-50)
+          hover: '#2563eb',   // A darker shade for button hovers (blue-600)
         },
+
+        // Background colors for the main layout components.
+        // We will apply these manually in our layout and page files.
+        panel: {
+          DEFAULT: '#f1f5f9', // The main content area in LIGHT mode (slate-100)
+          dark: '#111827',    // The deep navy content area in DARK mode (gray-900)
+        },
+        sidebar: '#ffffff', // The sidebar is ALWAYS white, regardless of theme.
+        card: '#ffffff',    // Content cards are ALWAYS white, regardless of theme.
+
+        // Text colors.
+        content: {
+          // Used on light backgrounds (sidebar, cards)
+          primary: '#1e293b',   // (slate-800)
+          secondary: '#64748b', // (slate-500)
+          
+          // Used on the dark panel background in dark mode
+          primary_dark: '#f9fafb', // (gray-50)
+          secondary_dark: '#9ca3af',// (gray-400)
+        },
+        
+        // A single, consistent border color for cards and dividers.
+        border: '#e5e7eb', // (gray-200)
       },
     },
   },
