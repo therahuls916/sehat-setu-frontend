@@ -110,7 +110,7 @@ export default function DoctorLoginPage() {
                 value={email} 
                 onChange={(e) => setEmail(e.target.value)} 
                 required 
-                className="mt-1 block w-full rounded-lg border-gray-300 dark:border-dark-border bg-gray-50 dark:bg-dark-surface px-4 py-3 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 dark:focus:ring-teal-500/50 focus:ring-opacity-50"
+                className="mt-1 block w-full rounded-lg border-gray-300 dark:border-dark-border bg-gray-50 dark:bg-dark-surface px-4 py-3 shadow-sm text-gray-900 dark:text-white focus:border-teal-500 focus:ring focus:ring-teal-200 dark:focus:ring-teal-500/50 focus:ring-opacity-50"
                 placeholder="you@example.com"
               />
             </div>
@@ -122,7 +122,7 @@ export default function DoctorLoginPage() {
                 value={password} 
                 onChange={(e) => setPassword(e.target.value)} 
                 required 
-                className="mt-1 block w-full rounded-lg border-gray-300 dark:border-dark-border bg-gray-50 dark:bg-dark-surface px-4 py-3 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 dark:focus:ring-teal-500/50 focus:ring-opacity-50"
+                className="mt-1 block w-full rounded-lg border-gray-300 dark:border-dark-border bg-gray-50 dark:bg-dark-surface px-4 py-3 shadow-sm text-gray-900 dark:text-white focus:border-teal-500 focus:ring focus:ring-teal-200 dark:focus:ring-teal-500/50 focus:ring-opacity-50"
                 placeholder="••••••••"
               />
             </div>
