@@ -51,7 +51,8 @@ export default function PrescriptionsPage() {
   
   const { data: prescriptions, isLoading, isError } = useQuery({ 
       queryKey: ['incomingPrescriptions'], 
-      queryFn: fetchPrescriptions 
+      queryFn: fetchPrescriptions ,
+       refetchInterval: 5000,
   });
 
   // --- 1. FIX: Implement the Mutation Logic ---

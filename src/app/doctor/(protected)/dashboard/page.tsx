@@ -25,6 +25,7 @@ export default function DoctorDashboardPage() {
   const { data: stats, isLoading, isError } = useQuery({
     queryKey: ['dashboardStats'],
     queryFn: fetchDashboardStats,
+     refetchInterval: 5000,
   });
 
   // --- LOADING / ERROR STATES (Updated with new text colors) ---

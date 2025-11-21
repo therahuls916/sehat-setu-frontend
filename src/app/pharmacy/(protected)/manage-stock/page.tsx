@@ -34,12 +34,12 @@ const deleteStockItem = async (id: string) => {
 // --- MAIN COMPONENT ---
 export default function ManageStockPage() {
   const queryClient = useQueryClient();
-  
+
   const [newItem, setNewItem] = useState({ medicineName: '', quantity: 0 });
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
   const [tempQuantity, setTempQuantity] = useState(0);
 
-  const { data: stock, isLoading, isError } = useQuery({ queryKey: ['stockItems'], queryFn: fetchStock });
+  const { data: stock, isLoading, isError } = useQuery({ queryKey: ['stockItems'], queryFn: fetchStock, refetchInterval: 5000, });
 
   const addMutation = useMutation({
     mutationFn: addStockItem,
@@ -66,9 +66,9 @@ export default function ManageStockPage() {
   const deleteMutation = useMutation({
     mutationFn: deleteStockItem,
     onSuccess: () => {
-        toast.success('Item deleted successfully!');
-        queryClient.invalidateQueries({ queryKey: ['stockItems'] });
-        queryClient.invalidateQueries({ queryKey: ['pharmacyDashboardStats'] });
+      toast.success('Item deleted successfully!');
+      queryClient.invalidateQueries({ queryKey: ['stockItems'] });
+      queryClient.invalidateQueries({ queryKey: ['pharmacyDashboardStats'] });
     },
     onError: () => toast.error('Failed to delete item.')
   });
@@ -79,14 +79,14 @@ export default function ManageStockPage() {
     if (!newItem.medicineName) return toast.error('Medicine name is required.');
     addMutation.mutate(newItem);
   };
-  
+
   const handleStartEditing = (item: StockItem) => {
     setEditingRowId(item._id);
     setTempQuantity(item.quantity);
   };
-  
+
   const handleCancelEditing = () => setEditingRowId(null);
-  
+
   const handleQuantityChange = (amount: number) => {
     setTempQuantity(prev => Math.max(0, prev + amount));
   };
@@ -97,8 +97,8 @@ export default function ManageStockPage() {
   };
 
   const handleDelete = (id: string) => {
-    if(window.confirm('Are you sure you want to delete this item?')) {
-        deleteMutation.mutate(id);
+    if (window.confirm('Are you sure you want to delete this item?')) {
+      deleteMutation.mutate(id);
     }
   };
 
@@ -114,10 +114,10 @@ export default function ManageStockPage() {
   return (
     <div className="space-y-8">
       <h2 className="text-2xl font-bold text-content-primary dark:text-content-primary_dark">Manage Stock</h2>
-      
+
       <div className={cardStyles}>
         <h3 className={`${cardTitleStyles} flex items-center gap-2`}>
-            <PackagePlus size={20} /> Add New Medicine
+          <PackagePlus size={20} /> Add New Medicine
         </h3>
         <form onSubmit={handleAddItem} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
           <div className="md:col-span-2">
@@ -137,8 +137,8 @@ export default function ManageStockPage() {
       </div>
 
       <div className={cardStyles}>
-         <h3 className={`${cardTitleStyles} flex items-center gap-2`}>
-            <PackageSearch size={20} /> Current Inventory
+        <h3 className={`${cardTitleStyles} flex items-center gap-2`}>
+          <PackageSearch size={20} /> Current Inventory
         </h3>
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -153,7 +153,7 @@ export default function ManageStockPage() {
               {stock?.map((item) => (
                 <tr key={item._id} className={editingRowId === item._id ? "bg-brand-light" : "hover:bg-gray-50"}>
                   <td className="px-6 py-4 whitespace-nowrap font-medium text-content-primary">{item.medicineName}</td>
-                  
+
                   <td className="px-6 py-4 whitespace-nowrap text-content-secondary">
                     {editingRowId === item._id ? (
                       <div className="flex items-center gap-1.5">
@@ -167,7 +167,7 @@ export default function ManageStockPage() {
                       <span className={`font-semibold ${item.quantity === 0 ? 'text-red-500' : 'text-content-primary'}`}>{item.quantity}</span>
                     )}
                   </td>
-                  
+
                   <td className="px-6 py-4 whitespace-nowrap text-right">
                     <div className="flex items-center justify-end space-x-4">
                       {editingRowId === item._id ? (

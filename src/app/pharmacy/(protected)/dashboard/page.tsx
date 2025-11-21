@@ -26,6 +26,7 @@ export default function PharmacyDashboardPage() {
   const { data: stats, isLoading, isError } = useQuery({
     queryKey: ['pharmacyDashboardStats'],
     queryFn: fetchDashboardStats,
+     refetchInterval: 5000,
   });
 
   // --- LOADING / ERROR STATES (Updated with new text colors) ---

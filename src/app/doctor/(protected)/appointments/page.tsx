@@ -45,6 +45,7 @@ export default function AppointmentsPage() {
   const { data: appointments, isLoading, isError } = useQuery({
     queryKey: ['appointments'],
     queryFn: fetchAppointments,
+        refetchInterval: 5000,
   });
 
   const updateAppointmentMutation = useMutation({
