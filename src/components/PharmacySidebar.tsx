@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Package, FileText, User, LogOut } from 'lucide-react';
+import { LayoutDashboard, Package, FileText, User, LogOut, ScanLine } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/utils/firebase';
 import { useRouter } from 'next/navigation';
@@ -13,6 +13,7 @@ const navLinks = [
   { name: 'Manage Stock', href: '/pharmacy/manage-stock', icon: Package },
   { name: 'Prescriptions', href: '/pharmacy/prescriptions', icon: FileText },
   { name: 'Profile', href: '/pharmacy/profile', icon: User },
+    { name: 'Digitize Rx', href: '/pharmacy/digitize', icon: ScanLine }, 
 ];
 
 export default function PharmacySidebar() {

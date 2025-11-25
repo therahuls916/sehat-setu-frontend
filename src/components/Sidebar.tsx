@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Calendar, FileText, User, LogOut } from 'lucide-react';
+import { LayoutDashboard, Calendar, FileText, User, LogOut, Bot } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/utils/firebase';
 import { useRouter } from 'next/navigation';
@@ -13,6 +13,7 @@ const navLinks = [
   { name: 'Appointments', href: '/doctor/appointments', icon: Calendar },
   { name: 'Prescription', href: '/doctor/prescription', icon: FileText },
   { name: 'Patient History', href: '/doctor/history', icon: FileText },
+    { name: 'AI Assistant', href: '/doctor/ai-assistant', icon: Bot }, 
   { name: 'Profile', href: '/doctor/profile', icon: User },
 ];
 
