@@ -5,7 +5,7 @@ import apiClient from '@/utils/api';
 import { FileText, Calendar, User } from 'lucide-react';
 import Link from 'next/link';
 
-// --- DATA STRUCTURE for the new API endpoint ---
+// --- DATA STRUCTURE ---
 interface HistoryItem {
   _id: string; // Appointment ID
   appointmentDate: string;
@@ -40,11 +40,11 @@ export default function HistoryPage() {
         A record of all completed appointments and their prescriptions.
       </p>
 
-      <div className="bg-card rounded-lg shadow-sm">
+      <div className="bg-card rounded-lg shadow-sm border border-border">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-border">
+              <tr className="border-b border-border bg-gray-50 dark:bg-gray-800">
                 <th className="px-6 py-3 text-left text-xs font-semibold text-content-secondary uppercase tracking-wider">Patient</th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-content-secondary uppercase tracking-wider">Date</th>
                 <th className="px-6 py-3 text-right text-xs font-semibold text-content-secondary uppercase tracking-wider">Action</th>
@@ -53,11 +53,13 @@ export default function HistoryPage() {
             <tbody className="divide-y divide-border">
               {history && history.length > 0 ? (
                 history.map((item) => (
-                  <tr key={item._id} className="hover:bg-gray-50">
+                  <tr key={item._id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
-                            <User size={16} className="text-content-secondary" />
-                            <span className="font-medium text-content-primary">{item.patientId.name}</span>
+                            <div className="p-2 bg-brand-light rounded-full text-brand">
+                                <User size={16} />
+                            </div>
+                            <span className="font-medium text-content-primary">{item.patientId?.name || 'Unknown'}</span>
                         </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -67,10 +69,17 @@ export default function HistoryPage() {
                         </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
-                      {/* We can link to a future "view prescription" page, or simply re-use the edit page for now */}
-                      <Link href={`#`} className="flex items-center justify-end gap-2 text-sm font-semibold text-brand hover:text-brand-hover">
-                          <FileText size={16} /> View Prescription
-                      </Link>
+                      {/* --- UPDATED LINK HERE --- */}
+                      {item.prescriptionId ? (
+                          <Link 
+                            href={`/doctor/history/view?id=${item.prescriptionId}`} 
+                            className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-semibold text-brand bg-brand-light rounded-md hover:bg-blue-100 transition-colors"
+                          >
+                              <FileText size={16} /> View Prescription
+                          </Link>
+                      ) : (
+                          <span className="text-gray-400 text-sm italic">No Prescription</span>
+                      )}
                     </td>
                   </tr>
                 ))
